@@ -1,33 +1,55 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { randomUUID } from 'node:crypto';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { Task } from './entities/task.entity';
 
 @Injectable()
 export class TasksService {
-  constructor(private readonly prisma: PrismaService) {}
+  private tasks: Task[] = [];
 
-  findAll() {
-    return this.prisma.task.findMany();
-  }
-
-  async findOne(id: string) {
-    const task = await this.prisma.task.findUnique({ where: { id } });
-    if (!task) throw new NotFoundException(`Task ${id} not found`);
+  create(dto: CreateTaskDto): Task {
+    const now = new Date();
+    const task: Task = {
+      id: randomUUID(),
+      title: dto.title,
+      status: dto.status ?? 'todo',
+      dueDate: dto.dueDate,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.tasks = [...this.tasks, task];
     return task;
   }
 
-  create(dto: CreateTaskDto) {
-    return this.prisma.task.create({ data: dto });
+  findAll(): Task[] {
+    return [...this.tasks];
   }
 
-  async update(id: string, dto: UpdateTaskDto) {
-    await this.findOne(id);
-    return this.prisma.task.update({ where: { id }, data: dto });
+  findOne(id: string): Task {
+    const task = this.tasks.find((t) => t.id === id);
+    if (!task) {
+      throw new NotFoundException(`Task ${id} not found`);
+    }
+    return task;
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
-    return this.prisma.task.delete({ where: { id } });
+  update(id: string, dto: UpdateTaskDto): Task {
+    const current = this.findOne(id);
+    const updated: Task = {
+      ...current,
+      ...dto,
+      updatedAt: new Date(),
+    };
+    this.tasks = this.tasks.map((t) => (t.id === id ? updated : t));
+    return updated;
+  }
+
+  remove(id: string): void {
+    const before = this.tasks.length;
+    this.tasks = this.tasks.filter((t) => t.id !== id);
+    if (this.tasks.length === before) {
+      throw new NotFoundException(`Task ${id} not found`);
+    }
   }
 }
