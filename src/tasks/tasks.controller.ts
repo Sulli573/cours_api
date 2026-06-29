@@ -1,47 +1,49 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
-  Param,
   Body,
+  Controller,
+  Delete,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
+  Patch,
+  Post,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-import { Task } from './entities/task.entity';
 
 @Controller('tasks')
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
   @Get()
-  findAll(): Task[] {
+  @HttpCode(HttpStatus.OK)
+  findAll() {
     return this.tasksService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Task {
+  @HttpCode(HttpStatus.OK)
+  findOne(@Param('id') id: string) {
     return this.tasksService.findOne(id);
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() dto: CreateTaskDto): Task {
+  create(@Body() dto: CreateTaskDto) {
     return this.tasksService.create(dto);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateTaskDto): Task {
+  @HttpCode(HttpStatus.OK)
+  update(@Param('id') id: string, @Body() dto: UpdateTaskDto) {
     return this.tasksService.update(id, dto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string): void {
-    this.tasksService.remove(id);
+  async remove(@Param('id') id: string) {
+    await this.tasksService.remove(id);
   }
 }
