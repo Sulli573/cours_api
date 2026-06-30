@@ -18,21 +18,21 @@ export class AuthService {
     private readonly jwt: JwtService,
   ) {}
 
-  async signup(dto: SignupDto) {
-    const existing = await this.users.findByEmail(dto.email);
-    if (existing) {
-      throw new ConflictException('Email already registered');
-    }
+async signup(dto: SignupDto) {
+  // const existing = await this.users.findByEmail(dto.email);
+  // if (existing) {
+  //   throw new ConflictException('Email already registered');
+  // }
 
-    const passwordHash = await bcrypt.hash(dto.password, this.SALT_ROUNDS);
+  const passwordHash = await bcrypt.hash(dto.password, this.SALT_ROUNDS);
 
-    const user = await this.users.create({
-      email: dto.email,
-      password: passwordHash,
-    });
+  const user = await this.users.create({
+    email: dto.email,
+    password: passwordHash,
+  });
 
-    return { id: user.id, email: user.email };
-  }
+  return { id: user.id, email: user.email };
+}
 
   async login(dto: LoginDto) {
     const user = await this.users.findByEmail(dto.email);
