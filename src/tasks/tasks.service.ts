@@ -7,27 +7,39 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 export class TasksService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.task.findMany();
+  findAll(userId: string) {
+    return this.prisma.task.findMany({ where: { userId } });
   }
 
-  async findOne(id: string) {
-    const task = await this.prisma.task.findUnique({ where: { id } });
+  async findOne(id: string, userId: string) {
+    const task = await this.prisma.task.findFirst({ where: { id, userId } });
     if (!task) throw new NotFoundException(`Task ${id} not found`);
     return task;
   }
 
-  create(dto: CreateTaskDto) {
-    return this.prisma.task.create({ data: dto });
+  create(dto: CreateTaskDto, userId: string) {
+    return this.prisma.task.create({
+      data: {
+        ...dto,
+        dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
+        userId,
+      },
+    });
   }
 
-  async update(id: string, dto: UpdateTaskDto) {
-    await this.findOne(id);
-    return this.prisma.task.update({ where: { id }, data: dto });
+  async update(id: string, dto: UpdateTaskDto, userId: string) {
+    await this.findOne(id, userId);
+    return this.prisma.task.update({
+      where: { id },
+      data: {
+        ...dto,
+        dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
+      },
+    });
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, userId: string) {
+    await this.findOne(id, userId);
     return this.prisma.task.delete({ where: { id } });
   }
 }
